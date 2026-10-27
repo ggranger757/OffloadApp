@@ -196,30 +196,6 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
 .btns{display:flex;gap:8px;flex-wrap:wrap}
 .sheet textarea{width:100%;box-sizing:border-box;min-height:90px;border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:8px;font-family:var(--f-mono);font-size:12px;margin-bottom:8px}
 .note{font-size:13px;color:var(--muted);margin:6px 0 0;max-width:60ch}
-.siri ol{margin:0;padding-left:20px;display:grid;gap:10px;font-size:14px;max-width:60ch}
-.siri ol li{min-width:0}
-.siri ol li::marker{font-family:var(--f-mono);color:var(--muted);font-size:12px}
-.field{display:grid;gap:6px;margin-bottom:10px}
-.field label{font-size:13px;font-weight:600}
-.field input{border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:9px 12px;font-family:var(--f-mono);font-size:12.5px;min-width:0;width:100%;box-sizing:border-box}
-.copyrow{display:flex;gap:8px;align-items:center;min-width:0}
-.copyrow code{flex:1;min-width:0;overflow-x:auto;white-space:nowrap;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-family:var(--f-mono);font-size:12px}
-.copyrow .btn{padding:7px 11px;font-size:13px;flex:none}
-.status{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin:8px 0}
-.status.bad{color:var(--due)}
-.status.good{color:var(--ok)}
-.say{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:13.5px}
-.say li{background:var(--sunk);border-radius:10px;padding:8px 10px}
-.say li b{font-weight:600}
-.say li span{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
-.srow{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:var(--sunk);border-radius:14px;padding:12px;text-align:left;margin-bottom:4px}
-.srow-ic{width:36px;height:36px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
-.srow-ic svg{width:19px;height:19px}
-.srow-t{flex:1;display:grid;gap:1px;min-width:0}
-.srow-t b{font-size:15px}
-.srow-t small{font-size:12.5px;color:var(--muted)}
-.srow-go{font-size:22px;color:var(--muted);line-height:1}
-.banner.siri-hint{border-style:solid;background:var(--accent-soft);border-color:transparent;color:var(--ink)}
 .toast{position:fixed;left:50%;bottom:calc(120px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:30;box-shadow:var(--shadow);max-width:calc(100% - 40px);text-align:center}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -232,7 +208,6 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
       <h1 class="logo">Offload<i aria-hidden="true"></i></h1>
       <span class="sp"></span>
       <button class="ib" id="bSearch" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
-      <button class="ib" id="bSiri" aria-label="Capture with Siri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button class="ib" id="bSettings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
     </div>
     <div class="search" id="searchRow" hidden><input id="q" type="search" placeholder="Search everything you've saved" autocomplete="off"></div>
@@ -282,7 +257,6 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
 <div class="sheet gut" id="setSheet" hidden role="dialog" aria-label="Settings">
   <div class="grab"></div>
   <h3>Settings</h3>
-  <button class="srow" id="bSiriRow"><span class="srow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="srow-t"><b>Capture with Siri</b><small id="siriRowState">Not set up</small></span><span class="srow-go" aria-hidden="true">›</span></button>
   <h4>Appearance</h4>
   <div class="seg" id="segTheme"><button data-v="system">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div>
   <h4>Font</h4>
@@ -313,39 +287,6 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
   </form>
 </div>
 
-<div class="sheet gut" id="siriSheet" hidden role="dialog" aria-label="Siri capture">
-  <div class="grab"></div>
-  <h3>Capture with Siri</h3>
-  <div class="siri">
-    <p class="note" style="margin:0 0 12px">Say "Hey Siri, Offload this" and speak. What you say lands in your feed the next time Offload opens.</p>
-    <div class="field"><label for="srv">Inbox server address</label><input id="srv" type="url" inputmode="url" placeholder="https://offload-inbox.yourname.workers.dev" autocomplete="off"></div>
-    <div class="field"><label>Your private capture key</label>
-      <div class="copyrow"><code id="keyv"></code><button class="btn" data-copy="key">Copy</button></div></div>
-    <p class="status" id="syncStatus"></p>
-    <div class="btns"><button class="btn" id="bPull">Check for new items</button><button class="btn danger" id="bRekey">Make a new key</button></div>
-    <h4>Set up the shortcut on iPhone</h4>
-    <ol>
-      <li>Open the <b>Shortcuts</b> app, tap <b>+</b>, and name the shortcut <b>Offload this</b>. Siri uses the name as the phrase.</li>
-      <li>Add the action <b>Dictate Text</b>.</li>
-      <li>Add <b>Get Contents of URL</b> and paste this address:
-        <div class="copyrow" style="margin-top:6px"><code id="capUrl"></code><button class="btn" data-copy="url">Copy</button></div></li>
-      <li>In that action, tap <b>Show More</b>. Set <b>Method</b> to POST. Add a header named <b>Authorization</b> with this value:
-        <div class="copyrow" style="margin-top:6px"><code id="authV"></code><button class="btn" data-copy="auth">Copy</button></div></li>
-      <li>Set <b>Request Body</b> to JSON, add a Text field named <b>text</b>, and set its value to the <b>Dictated Text</b> variable.</li>
-      <li>Add <b>Show Result</b> so Siri says "Saved to Offload."</li>
-    </ol>
-    <h4>Things you can say</h4>
-    <ul class="say">
-      <li><b>"Podcast idea: interview a barista, category work"</b><span>Note filed under Work</span></li>
-      <li><b>"Remind me to call Mom tomorrow at 6 PM"</b><span>Reminder for tomorrow, 6:00 PM</span></li>
-      <li><b>"Remind me every Monday at 9 to send the report"</b><span>Repeating reminder</span></li>
-      <li><b>"Grocery list milk, eggs and bread"</b><span>New checklist with three items</span></li>
-      <li><b>"Add coffee to my grocery list"</b><span>Adds an item to that list</span></li>
-    </ul>
-    <p class="note">On Android, the free HTTP Shortcuts app can send the same request from a home-screen or Assistant shortcut.</p>
-  </div>
-</div>
-
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -353,12 +294,11 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
 "use strict";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const KEY='offload:v1', HR=36e5, DAY=864e5;
-const DEFAULT_SERVER='__OFFLOAD_SERVER__'.startsWith('__')?'':'__OFFLOAD_SERVER__';
 const DOW=['S','M','T','W','T','F','S'], DOWN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const root=document.documentElement, hostTheme=root.getAttribute('data-theme');
 
 const DEFAULT_CATS=[{id:'work',name:'Work',color:'c4'},{id:'ideas',name:'Ideas',color:'c2'},{id:'personal',name:'Personal',color:'c3'}];
-let S={items:[],cats:[],sync:{},settings:{theme:'system',font:'sans'}};
+let S={items:[],cats:[],settings:{theme:'system',font:'sans'}};
 const ui={cat:null,composeCat:null,catMode:'compose',catEdit:null,catColor:'c1',filter:'all',tag:null,q:'',mode:'note',editing:null,repeat:[],sheet:null,delArm:false};
 
 /* ---------- storage ---------- */
@@ -484,13 +424,12 @@ function card(it){
       <div class="when ${late?'late':''}">${late?'<span class="late-pill">Overdue</span>':''}${it.done?'Done · ':''}${dueLabel(it.due)}${it.repeat&&it.repeat.length?' · '+repLabel(it.repeat):''}</div></div></div>`;
   }else{kind='Note';body=`<div class="txt">${rich(it.text)}</div>`}
   return `<article class="card t-${it.type}${it.done?' is-done':''}" data-id="${it.id}">
-    <div class="meta"><span class="kind">${kind}</span>${(c=>c?`<span class="cattag ${c.color}"><i class="dot"></i>${esc(c.name)}</span>`:'')(catOf(it.cat))}${it.pinned?'<span class="pin">● Pinned</span>':''}<span class="sp"></span>${it.src?`<span>${esc(it.src==='siri'?'Siri':it.src)}</span>`:''}<time>${fT(it.created)}</time><button class="more" aria-label="Options">⋯</button></div>${body}</article>`;
+    <div class="meta"><span class="kind">${kind}</span>${(c=>c?`<span class="cattag ${c.color}"><i class="dot"></i>${esc(c.name)}</span>`:'')(catOf(it.cat))}${it.pinned?'<span class="pin">● Pinned</span>':''}<span class="sp"></span><time>${fT(it.created)}</time><button class="more" aria-label="Options">⋯</button></div>${body}</article>`;
 }
 function render(scroll){
   renderRail();renderCats();
   const feed=$('#feed');let list=visible(),h='';
   const home=ui.filter==='all'&&!ui.tag&&!ui.q&&!ui.cat;
-  if(home&&!S.sync.last&&!S.siriHintSeen)h+=`<div class="banner siri-hint"><span>Save things hands-free: say "Hey Siri, Offload this".</span><button data-x="siri">Set up Siri</button><button data-x="siri-no" style="color:var(--muted);font-weight:500">Not now</button></div>`;
   if(home&&S.items.some(i=>i.ex))h+=`<div class="banner"><span>These are example entries so you can see how it works.</span><button data-x="clearex">Remove examples</button></div>`;
   if(ui.filter==='reminder'){
     list.sort((a,b)=>(a.done-b.done)||(a.due-b.due));
@@ -616,115 +555,6 @@ $('#catpick').addEventListener('change',e=>{const v=e.target.value;
   if(v==='__new'){e.target.value=ui.composeCat||'';openCats('compose');ui.showForm=true;renderCatSheet();setTimeout(()=>$('#cname').focus(),50);return}
   ui.composeCat=v||null;renderCats()});
 
-/* ---------- spoken text -> entry ---------- */
-const NUM={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,fifteen:15,twenty:20,thirty:30,forty:40,'forty-five':45,'forty five':45};
-const WD=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-const cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):t;
-function parseWhen(s,now){
-  let rest=' '+s+' ',d=null,h=null,mi=0,rel=null,rep=[],m;
-  const take=re=>{const x=rest.match(re);if(x)rest=rest.slice(0,x.index)+' '+rest.slice(x.index+x[0].length);return x};
-  if(m=take(/\s(?:every|each)\s+(day|weekday|weekend|sunday|monday|tuesday|wednesday|thursday|friday|saturday)s?\b/i)){
-    const w=m[1].toLowerCase();rep=w==='day'?[0,1,2,3,4,5,6]:w==='weekday'?[1,2,3,4,5]:w==='weekend'?[0,6]:[WD.indexOf(w)]}
-  if(m=take(/\s+in\s+(\d+|an?|one|two|three|four|five|six|seven|eight|nine|ten|fifteen|twenty|thirty|forty[- ]five)\s+(minute|min|hour|hr|day|week)s?\b/i)){
-    const n=+m[1]||NUM[m[1].toLowerCase()]||1,u=m[2].toLowerCase();rel=n*(u.startsWith('min')?6e4:u.startsWith('h')?HR:u==='day'?DAY:7*DAY)}
-  else if(take(/\s+in\s+half\s+an\s+hour\b/i))rel=30*6e4;
-  const tm=re=>{const x=take(re);if(!x)return false;
-    const v=x[1].toLowerCase();if(v==='noon'){h=12;return true}if(v==='midnight'){h=0;return true}
-    const y=v.match(/(\d{1,2})(?::(\d{2}))?\s*(a|p)?/);h=+y[1];mi=+(y[2]||0);
-    if(y[3]==='p'&&h<12)h+=12;if(y[3]==='a'&&h===12)h=0;if(!y[3]&&h<8)h+=12;return true};
-  tm(/\s(?:at|by|around)\s+(noon|midnight|\d{1,2}(?::\d{2})?\s*(?:a\.?\s?m\.?|p\.?\s?m\.?|o'?clock)?)(?=[\s.,!?]|$)/i)||
-    tm(/\s(\d{1,2}(?::\d{2})?\s*(?:a\.?\s?m\.?|p\.?\s?m\.?))(?=[\s.,!?]|$)/i);
-  const today=new Date(now);today.setHours(0,0,0,0);
-  if(take(/\stonight\b/i)){d=new Date(today);if(h===null)h=20;else if(h<12)h+=12}
-  if(take(/\s(?:the\s+)?day\s+after\s+tomorrow\b/i)){d=new Date(today);d.setDate(d.getDate()+2)}
-  if(take(/\stomorrow\b/i)){d=new Date(today);d.setDate(d.getDate()+1)}
-  if(take(/\stoday\b/i))d=new Date(today);
-  if(m=take(/\s(?:on\s+|next\s+|this\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i)){
-    d=new Date(today);const t=WD.indexOf(m[1].toLowerCase());let k=(t-d.getDay()+7)%7;if(k===0||/next/i.test(m[0]))k=k||7;d.setDate(d.getDate()+k)}
-  if(m=take(/\s(?:in\s+the\s+|this\s+)?(morning|afternoon|evening)\b/i)){const w=m[1].toLowerCase();
-    if(h===null)h=w==='morning'?9:w==='afternoon'?14:18;else if(w!=='morning'&&h<12)h+=12;if(!d)d=new Date(today)}
-  let due;
-  if(rel!==null)due=now+rel;
-  else if(d||h!==null){const x=new Date(d||today);x.setHours(h===null?9:h,mi,0,0);due=x.getTime();if(!d&&due<=now)due+=DAY}
-  else if(rep.length){const x=new Date(today);x.setHours(9,0,0,0);due=x.getTime()}
-  else due=roundUp(now+HR);
-  if(rep.length)due=nextOcc(due,rep,now);
-  rest=rest.replace(/\s+/g,' ').trim().replace(/^(?:to|that|about)\s+/i,'').replace(/\s+(?:to|at|on|by)$/i,'').replace(/^[,.\s]+|[,\s]+$/g,'');
-  return{due,repeat:rep,rest};
-}
-function splitItems(t){return t.split(/\s*(?:,|;|\n|\band then\b|\bthen\b|\band\b|\bplus\b)\s*/i).map(x=>x.replace(/[.!?]+$/,'').trim()).filter(Boolean).map(cap)}
-/* turns one spoken or typed line into an entry; returns {added:true} when it appended to an existing list */
-function fromText(raw,created){
-  const now=Date.now();let t=String(raw).trim().replace(/^(?:hey\s+)?offload(?:\s+this)?[\s:,.-]*/i,'');
-  let catName=null,m=t.match(/[\s,.]+(?:file (?:it |this )?under|in (?:the )?category|category)\s+([\p{L}\p{N}' -]{1,32}?)[.!?]*$/iu);
-  if(m){catName=m[1].trim();t=t.slice(0,m.index)}
-  const pc=pullCat(t);t=pc.text;let cat=pc.cat;
-  if(catName)cat=catByName(catName)||addCat(cap(catName));
-  const base={id:uid(),created:created||now};if(cat)base.cat=cat.id;
-  if(m=t.match(/^add\s+(.+?)\s+to\s+(?:my\s+|the\s+|our\s+)?(.+?)\s*list[.!?]*$/i)){
-    const want=slug(m[2].replace(/[^\p{L}\p{N} ]/gu,''));
-    const L=S.items.filter(i=>i.type==='list'&&slug((i.text||'').replace(/(^|\s)#[\p{L}\p{N}_-]+/gu,'').replace(/\s*list$/i,''))===want).sort((a,b)=>b.created-a.created)[0];
-    const items=splitItems(m[1]).map(x=>({t:x,done:false}));
-    if(L){L.items.push(...items);return{added:L}}
-    return Object.assign(base,{type:'list',text:cap(m[2].trim())+' list',items});
-  }
-  if(m=t.match(/^((?:[\p{L}\p{N}'-]+\s+){0,4}?)list\b[\s:,.-]*(.+)$/iu)){
-    const items=splitItems(m[2]);
-    if(items.length)return Object.assign(base,{type:'list',text:m[1].trim()?cap(m[1].trim())+' list':'',items:items.map(x=>({t:x,done:false}))});
-  }
-  if(m=t.match(/^(?:remind\s+me|reminder|remember)\b[\s:,]*(.*)$/i)){
-    const w=parseWhen(m[1],now);
-    return Object.assign(base,{type:'reminder',text:cap(w.rest||m[1]),due:w.due,repeat:w.repeat,done:false,notified:0});
-  }
-  return Object.assign(base,{type:'note',text:cap(t.trim())});
-}
-
-/* ---------- Siri inbox sync ---------- */
-function newKey(){const a=new Uint8Array(24);crypto.getRandomValues(a);return btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-const server=()=>(S.sync.server||DEFAULT_SERVER||'').trim().replace(/\/+$/,'');
-function openSiri(){S.siriHintSeen=true;save();renderSync();openSheet('#siriSheet');render(false)}
-$('#bSiri').addEventListener('click',openSiri);
-$('#bSiriRow').addEventListener('click',openSiri);
-function renderSync(){
-  const srv=server(),k=S.sync.key;
-  $('#srv').value=S.sync.server||DEFAULT_SERVER||'';
-  $('#keyv').textContent=k;$('#capUrl').textContent=(srv||'https://YOUR-SERVER')+'/capture';$('#authV').textContent='Bearer '+k;
-  $('#siriRowState').textContent=!srv?'Not set up':S.sync.err?'Needs attention':S.sync.last?'Connected':'Server added, not checked yet';
-  const st=$('#syncStatus');st.className='status';
-  if(!srv){st.textContent='Add your inbox server address to turn on Siri capture.';return}
-  if(S.sync.err){st.className='status bad';st.textContent=S.sync.err;return}
-  if(S.sync.last){st.className='status good';st.textContent='Connected · last checked '+fT(S.sync.last)}else st.textContent='Not checked yet.';
-}
-async function pull(manual){
-  const srv=server();if(!srv||!S.sync.key){if(manual)toast('Add your inbox server address first.');return}
-  if(pull.busy)return;pull.busy=true;
-  const H={Authorization:'Bearer '+S.sync.key};
-  try{
-    const r=await fetch(srv+'/inbox',{headers:H,cache:'no-store'});
-    if(!r.ok)throw new Error(r.status===401?'The server did not accept this capture key.':'The server answered with an error ('+r.status+').');
-    const {items=[]}=await r.json();
-    const seen=new Set(S.items.map(i=>i.rid).filter(Boolean));let n=0;
-    items.forEach(x=>{if(seen.has(x.id))return;const it=fromText(x.text,x.created);n++;
-      if(it.added){delete it.added.ex;return}it.rid=x.id;it.src=x.source||'siri';S.items.push(it)});
-    save();
-    if(items.length)await fetch(srv+'/inbox',{method:'DELETE',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify({ids:items.map(x=>x.id)})});
-    S.sync.last=Date.now();S.sync.err='';save();
-    if(n){render();toast(n+' new from Siri')}else if(manual)toast('Nothing new from Siri yet.');
-  }catch(e){
-    S.sync.err=e&&e.message&&!/fetch|network|load/i.test(e.message)?e.message:"Couldn't reach the inbox server. Check the address and your connection.";save();
-    if(manual)toast(S.sync.err);
-  }finally{pull.busy=false;renderSync()}
-}
-$('#srv').addEventListener('change',e=>{let v=e.target.value.trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;S.sync.server=v;S.sync.err='';S.sync.last=0;save();renderSync();if(v)pull(true)});
-$('#bPull').addEventListener('click',()=>pull(true));
-$('#bRekey').addEventListener('click',e=>{const b=e.currentTarget;
-  if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='Tap again: your shortcut will need the new key';setTimeout(()=>{b.dataset.arm='';b.textContent='Make a new key'},5000);return}
-  pull(false).finally(()=>{S.sync.key=newKey();save();renderSync();b.dataset.arm='';b.textContent='Make a new key';toast('New key made. Update the Authorization header in your shortcut.')})});
-$('.siri').addEventListener('click',async e=>{const b=e.target.closest('[data-copy]');if(!b)return;
-  const v={key:S.sync.key,url:server()+'/capture',auth:'Bearer '+S.sync.key}[b.dataset.copy];
-  if(b.dataset.copy==='url'&&!server()){toast('Add your inbox server address first.');return}
-  try{await navigator.clipboard.writeText(v);toast('Copied')}catch(err){const c=b.previousElementSibling;const r=document.createRange();r.selectNodeContents(c);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selected. Copy it from the menu.')}});
-
 /* ---------- reminders ---------- */
 function complete(it){
   if(it.done){it.done=false}
@@ -773,8 +603,6 @@ $('#q').addEventListener('input',e=>{ui.q=e.target.value;render()});
 
 $('#feed').addEventListener('click',e=>{
   const tg=e.target.closest('.tag');if(tg){ui.tag=tg.dataset.tag;render();return}
-  if(e.target.closest('[data-x="siri"]')){openSiri();return}
-  if(e.target.closest('[data-x="siri-no"]')){S.siriHintSeen=true;save();render(false);return}
   if(e.target.closest('[data-x="clearex"]')){S.items=S.items.filter(i=>!i.ex);save();render();toast('Examples removed');return}
   const c=e.target.closest('.card');if(!c)return;const it=find(c.dataset.id);
   if(e.target.closest('.more')){openItem(it.id);return}
@@ -795,7 +623,7 @@ $('#itemSheet').addEventListener('click',async e=>{const b=e.target.closest('.ac
     S.items=S.items.filter(x=>x.id!==it.id);save();closeSheets();render(false);toast('Deleted')}
 });
 
-$('#bSettings').addEventListener('click',()=>{applySettings();updNotif();renderSync();openSheet('#setSheet')});
+$('#bSettings').addEventListener('click',()=>{applySettings();updNotif();openSheet('#setSheet')});
 $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.settings.theme=b.dataset.v;save();applySettings()});
 $('#segFont').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.settings.font=b.dataset.v;save();applySettings()});
 function updNotif(){const b=$('#bNotif'),n=$('#notifNote');
@@ -819,20 +647,18 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;
 $('#bInstall').addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;$('#bInstall').hidden=true});
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 window.addEventListener('storage',e=>{if(e.key===KEY){const v=load();if(v){S=v;render(false)}}});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();pull(false)}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
 
 /* ---------- boot ---------- */
 const stored=load();
-if(stored){S=stored;S.cats=Array.isArray(S.cats)?S.cats:[];
+if(stored){S=stored;if('sync' in S||'siriHintSeen' in S){delete S.sync;delete S.siriHintSeen;save()}S.cats=Array.isArray(S.cats)?S.cats:[];
   /* give existing users the starter categories once; a deleted one never comes back */
   if(!S.catsSeeded){DEFAULT_CATS.forEach(d=>{if(!catOf(d.id)&&!catByName(d.name))S.cats.push({...d})});S.catsSeeded=true;save()}
-  S.sync=S.sync||{};S.settings=Object.assign({theme:'system',font:'sans'},S.settings||{})}else{seed();save()}
+  S.settings=Object.assign({theme:'system',font:'sans'},S.settings||{})}else{seed();save()}
 const share=new URLSearchParams(location.search);
 const shared=[share.get('title'),share.get('text'),share.get('url')].filter(Boolean).join('\n');
 if(shared){ta.value=shared}
-if(!S.sync.key){S.sync.key=newKey();save()}
-applySettings();renderDows();setMode('note');render();renderSync();pull(false);
-setInterval(()=>{if(!document.hidden)pull(false)},60e3);
+applySettings();renderDows();setMode('note');render();
 setInterval(tick,20e3);tick();
 })();
 </script>
