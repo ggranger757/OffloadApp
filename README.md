@@ -14,39 +14,45 @@ Offload is a progressive web app (PWA). It installs to the home screen, works of
 - **Your choice of look.** Light, dark or system theme; sans, serif or mono font.
 - **Backup.** Copy a JSON backup and import it on another device.
 
+**Live app:** https://ggranger757.github.io/OffloadApp/
+
 ## Project layout
 
 ```
-src/app.html        the whole app: markup, styles and script
-src/sw.js           service worker (offline support)
-public/icons/       app icons
-build.py            assembles dist/ (Python standard library only)
-tools/make_icons.py regenerates the icons (needs Pillow)
-server/             optional Siri inbox: Cloudflare Worker + D1 database
-.github/workflows/  deploys the app to GitHub Pages, and the server to Cloudflare
+index.html            the app, served by GitHub Pages (built from src/app.html)
+manifest.webmanifest  install details: name, icons, colors
+sw.js                 offline support (built from src/sw.js)
+icons/                app icons
+.nojekyll             tells GitHub Pages to serve the files as they are
+src/                  source for index.html and sw.js
+build.py              rebuilds index.html, sw.js and manifest.webmanifest
+tools/make_icons.py   regenerates the icons (needs Pillow)
+server/               optional Siri inbox: Cloudflare Worker + D1 database
 ```
-
-## Run it locally
-
-```sh
-python3 build.py
-cd dist && python3 -m http.server 8080
-```
-
-Open http://localhost:8080. Install and offline support need HTTPS or `localhost`.
 
 ## Publish with GitHub Pages
 
-1. Create a repository on GitHub and push this folder to its `main` branch.
-2. In the repository, open **Settings → Pages** and set **Source** to **GitHub Actions**.
-3. Push again, or run **Deploy app to GitHub Pages** from the **Actions** tab.
+The built app is committed at the top of the repository, so GitHub Pages serves it directly.
 
-The app appears at `https://<your-username>.github.io/<repository-name>/`.
+1. Push the files to the `main` branch.
+2. Open **Settings → Pages**. Set **Source** to **Deploy from a branch**, branch **main**, folder **/ (root)**, and save.
+3. Wait a minute, then open https://ggranger757.github.io/OffloadApp/.
+
+### Making changes
+
+Edit `src/app.html`, then rebuild and commit the result:
+
+```sh
+python3 build.py
+git add -A && git commit -m "Update app" && git push
+```
+
+To try it locally first, run `python3 -m http.server 8080` in the repository folder and open http://localhost:8080.
 
 ### Install on a phone
 
-- **iPhone (Safari):** Share → Add to Home Screen.
-- **Android (Chrome):** menu → Install app.
+- **iPhone (Safari):** open the address, tap Share → Add to Home Screen.
+- **Android (Chrome):** open the address, tap the menu → Install app.
 
 ## Siri capture
 
@@ -67,7 +73,7 @@ npm run db:schema
 npm run deploy         # prints https://offload-inbox.<you>.workers.dev
 ```
 
-Or from GitHub: run `npx wrangler d1 create offload` once to get a database id, then add these under **Settings → Secrets and variables → Actions** and run **Deploy Siri inbox** from the **Actions** tab:
+Or from GitHub: run `npx wrangler d1 create offload` once to get a database id, then add these under **Settings → Secrets and variables → Actions** and run **Deploy Siri inbox (Cloudflare)** from the **Actions** tab:
 
 | Name | Kind | Value |
 |---|---|---|
@@ -77,9 +83,13 @@ Or from GitHub: run `npx wrangler d1 create offload` once to get a database id, 
 
 ### 2. Point the app at it
 
-Add a repository **variable** named `OFFLOAD_SERVER` with your server address (for example `https://offload-inbox.you.workers.dev`), then rerun the Pages workflow. Every copy of the app will use it.
+Rebuild with your server address so every copy of the app uses it, then commit and push:
 
-You can also paste the address into the app under the microphone button → **Inbox server address**.
+```sh
+OFFLOAD_SERVER=https://offload-inbox.you.workers.dev python3 build.py
+```
+
+Or paste the address into the app under the microphone button → **Inbox server address**.
 
 ### 3. Make the Shortcut
 

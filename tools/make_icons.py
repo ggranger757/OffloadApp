@@ -1,7 +1,7 @@
-"""Regenerate the app icons in public/icons. Requires Pillow: pip install pillow"""
+"""Regenerate the app icons in icons/. Requires Pillow: pip install pillow"""
 import pathlib
 from PIL import Image, ImageDraw
-OUT = pathlib.Path(__file__).resolve().parent.parent / 'public' / 'icons'
+OUT = pathlib.Path(__file__).resolve().parent.parent / 'icons'
 OUT.mkdir(parents=True, exist_ok=True)
 
 def icon(size, pad_frac, name, radius=True):
