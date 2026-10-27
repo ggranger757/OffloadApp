@@ -1,0 +1,10 @@
+name = "offload-inbox"
+main = "src/worker.js"
+compatibility_date = "2025-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "offload"
+# Paste the id printed by `npm run db:create`.
+# The "Deploy Siri inbox" GitHub Action fills this in from the D1_DATABASE_ID repository variable instead.
+database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
