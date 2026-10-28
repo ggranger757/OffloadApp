@@ -49,7 +49,7 @@ def main():
             {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
         ],
         "share_target": {"action": "./", "method": "GET", "params": {"title": "title", "text": "text", "url": "url"}},
-        "shortcuts": [{"name": "New note", "url": "./"}],
+        "shortcuts": [{"name": "New note", "short_name": "New note", "url": "./?new=1"}],
     }
     (OUT / 'manifest.webmanifest').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
 

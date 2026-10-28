@@ -76,6 +76,21 @@ button{cursor:pointer}
 .chip.tg[aria-pressed="true"]{background:var(--hl);color:var(--hl-ink);border-color:transparent}
 .chip.tg[aria-pressed="true"] b{color:inherit}
 .chip.pinchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip.newtag{border-style:dashed;color:var(--accent);font-weight:600}
+.chip.mng{padding:6px 10px;color:var(--muted)}
+/* color dot inside a tag that has a chosen color */
+.dot{display:inline-block;flex:none;width:8px;height:8px;border-radius:50%;background:var(--tc,var(--muted));margin-right:6px;vertical-align:1px}
+.tag .dot{width:7px;height:7px;margin-right:4px;vertical-align:1px}
+.swatches{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:2px 2px 4px}
+.sw{width:30px;height:30px;border-radius:50%;border:0;padding:0;background:var(--tc);flex:none}
+.sw[aria-checked="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--tc)}
+.sw.none{background:transparent;border:1.5px dashed var(--muted);--tc:var(--muted);position:relative}
+.sw.none::after{content:"";position:absolute;left:5px;right:5px;top:50%;border-top:1.5px solid var(--muted);transform:rotate(-45deg)}
+.cform .lbl2{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:2px 0 -4px}
+.how{font-size:13px;color:var(--muted);margin:6px 0 0;padding-left:20px;max-width:60ch}
+.how li{margin:3px 0}
+.cform{display:grid;gap:10px;padding-block:2px 4px}
+.cform input[type="text"]{border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:10px 12px;min-width:0;width:100%;box-sizing:border-box}
 .sugg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-block:-2px}
 .sugg::-webkit-scrollbar{display:none}
 .sugg button{flex:none;border:0;background:var(--hl);color:var(--hl-ink);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}
@@ -245,6 +260,13 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
   <label class="toggle" for="autoCal"><input type="checkbox" id="autoCal"><span>Add new reminders to my Calendar<small id="autoCalNote">After you save a reminder, your phone's "Add to Calendar" screen opens with it filled in. Tap Add, and your phone alerts you even when Offload is closed.</small></span></label>
   <div class="btns" style="margin-top:12px"><button class="btn" id="bNotif">Turn on notifications</button></div>
   <p class="note" id="notifNote">Reminders always show inside the app. Notifications also alert you while the app is open in the background.</p>
+  <h4>Quick add by voice</h4>
+  <p class="note">Offload can save a note from a link, so a voice assistant or shortcut can add to it for free. Everything after <code>?add=</code> becomes a new note. Add <code>&amp;tag=work</code> to file it under a tag.</p>
+  <div class="btns" style="margin-top:8px"><button class="btn" id="bQuickLink">Copy quick-add link</button></div>
+  <p class="note"><b>iPhone, with Siri:</b></p>
+  <ol class="how"><li>Open the Shortcuts app and make a new shortcut named “Offload”.</li><li>Add <b>Dictate Text</b>, then <b>URL Encode</b> (on the dictated text).</li><li>Add <b>Open URLs</b> and paste the quick-add link, then the encoded text after it.</li><li>Say “Hey Siri, Offload”.</li></ol>
+  <p class="note">iPhone caveat: that link opens in Safari, which keeps its own copy of your entries, separate from the home-screen app. It works if you use Offload in Safari.</p>
+  <p class="note"><b>Android:</b> share any text to Offload from another app, or press and hold the Offload icon and choose New note, then tap the microphone on your keyboard. Automation apps such as MacroDroid can open the quick-add link with text you dictate.</p>
   <h4>Install</h4>
   <div class="btns"><button class="btn primary" id="bInstall" hidden>Install Offload</button></div>
   <p class="note">On iPhone: tap Share, then Add to Home Screen. On Android or desktop Chrome: use Install app in the browser menu.</p>
@@ -255,6 +277,18 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
   <div class="btns"><button class="btn" id="bClearEx">Remove examples</button><button class="btn danger" id="bWipe">Delete everything</button></div>
 </div>
 
+
+<div class="sheet gut" id="tagSheet" hidden role="dialog" aria-labelledby="tagTitle">
+  <div class="grab"></div>
+  <h3 id="tagTitle">New tag</h3>
+  <form class="cform" id="tform">
+    <input type="text" id="tname" maxlength="32" placeholder="e.g. work, recipes, trip" autocomplete="off" autocapitalize="none" aria-label="Tag name">
+    <div class="lbl2" id="tclbl">Color</div>
+    <div class="swatches" id="tcolors" role="radiogroup" aria-labelledby="tclbl"></div>
+    <p class="note" id="tnote"></p>
+    <div class="btns"><button class="btn primary" type="submit" id="tsave">Create tag</button><button class="btn danger" type="button" id="tdel" hidden>Delete tag</button></div>
+  </form>
+</div>
 
 <div class="toast" id="toast" hidden></div>
 
@@ -270,7 +304,8 @@ const LEGACY_CATS=[{id:'work',name:'Work'},{id:'ideas',name:'Ideas'},{id:'person
 let S={items:[],settings:{theme:'system',font:'sans'}};
 const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const CAL_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg>';
-const ui={filter:'all',tag:null,pinned:false,q:'',mode:'note',editing:null,repeat:[],sheet:null,delArm:false};
+const TCOLORS=['c1','c2','c3','c4','c5','c6'];
+const ui={tagColor:null,tagEdit:null,filter:'all',tag:null,pinned:false,q:'',mode:'note',editing:null,repeat:[],sheet:null,delArm:false};
 
 /* ---------- storage ---------- */
 function load(){try{const r=localStorage.getItem(KEY);if(r){const v=JSON.parse(r);if(v&&Array.isArray(v.items))return v}}catch(e){}return null}
@@ -299,7 +334,7 @@ function rich(s){
   let h=esc(s||'');
   h=h.replace(/https?:\/\/[^\s<]+/g,u=>{let tail='';const m=u.match(/[.,;:!?)]+$/);if(m){tail=m[0];u=u.slice(0,-tail.length)}
     const show=u.replace(/^https?:\/\/(www\.)?/,'');return `<a href="${u}" target="_blank" rel="noopener">${show.length>46?show.slice(0,44)+'…':show}</a>${tail}`});
-  h=h.replace(/(^|\s)#([\p{L}\p{N}_-]+)/gu,(m,a,t)=>`${a}<button class="tag" data-tag="${t.toLowerCase()}">#${t}</button>`);
+  h=h.replace(/(^|\s)#([\p{L}\p{N}_-]+)/gu,(m,a,t)=>`${a}<button class="tag" data-tag="${t.toLowerCase()}">${dotHtml(t.toLowerCase())}#${t}</button>`);
   return h;
 }
 const tagsOf=s=>[...new Set(((s||'').match(/(?:^|\s)#[\p{L}\p{N}_-]+/gu)||[]).map(t=>t.trim().slice(1).toLowerCase()))];
@@ -319,12 +354,15 @@ function nextOcc(ts,rep,after){const d=new Date(ts);for(let i=0;i<800;i++){if(d.
 function toInput(t){const d=new Date(t),p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2600)}
 const find=id=>S.items.find(x=>x.id===id);
+const tcOf=t=>{const c=(S.tagColors||{})[t];return TCOLORS.includes(c)?c:null};
+const dotHtml=t=>{const c=tcOf(t);return c?`<i class="dot" style="--tc:var(--${c})" aria-hidden="true"></i>`:''};
+const nextColor=()=>{const used=Object.values(S.tagColors||{});return TCOLORS.find(c=>!used.includes(c))||TCOLORS[Object.keys(S.tagColors||{}).length%TCOLORS.length]};
 const tagSlug=n=>String(n).trim().toLowerCase().replace(/[^\p{L}\p{N}_-]+/gu,'-').replace(/^-+|-+$/g,'');
 /* Old versions filed entries under categories; a category is now just a tag. */
 function catToTag(it,name){const t=tagSlug(name);if(!t||tagsOf(fullText(it)).includes(t))return;it.text=((it.text||'')+' #'+t).trim()}
 function migrateCats(items,cats){const m={};LEGACY_CATS.concat(Array.isArray(cats)?cats:[]).forEach(c=>{if(c&&c.id&&c.name)m[c.id]=c.name});
   items.forEach(it=>{if(it&&it.cat){if(m[it.cat])catToTag(it,m[it.cat]);delete it.cat}})}
-function tagCounts(){const m={};S.items.forEach(it=>tagsOf(fullText(it)).forEach(t=>m[t]=(m[t]||0)+1));return m}
+function tagCounts(){const m={};(S.tags||[]).forEach(t=>m[t]=0);S.items.forEach(it=>tagsOf(fullText(it)).forEach(t=>m[t]=(m[t]||0)+1));return m}
 const sortedTags=()=>{const m=tagCounts();return Object.keys(m).sort((a,b)=>m[b]-m[a]||a.localeCompare(b)).map(t=>[t,m[t]])};
 
 /* ---------- theme ---------- */
@@ -359,8 +397,10 @@ function renderRail(){
   const tags=sortedTags();if(ui.tag&&!tags.some(x=>x[0]===ui.tag))ui.tag=null;
   if(!pins&&ui.pinned)ui.pinned=false;
   let h=pins?`<button class="chip pinchip" data-pin="1" aria-pressed="${ui.pinned}">📌 Pinned<b>${pins}</b></button>`:'';
-  h+=tags.map(([t,n])=>`<button class="chip tg" data-t="${esc(t)}" aria-pressed="${ui.tag===t}">#${esc(t)}<b>${n}</b></button>`).join('');
-  const tr=$('#tagrail'),k2=tr.scrollLeft;tr.hidden=!h;tr.innerHTML=h;tr.scrollLeft=k2;
+  h+=tags.map(([t,n])=>`<button class="chip tg" data-t="${esc(t)}" aria-pressed="${ui.tag===t}">${dotHtml(t)}#${esc(t)}<b>${n}</b></button>`).join('');
+  h=h.replace(/(<button class="chip tg"[^>]*aria-pressed="true"[^>]*>.*?<\/button>)/,`$1<button class="chip mng" data-manage="1" aria-label="Rename or delete #${esc(ui.tag||'')}">⋯</button>`);
+  h=`<button class="chip newtag" data-new="1">+ New tag</button>`+h;
+  const tr=$('#tagrail'),k2=tr.scrollLeft;tr.hidden=false;tr.innerHTML=h;tr.scrollLeft=k2;
   const nx=S.items.filter(i=>i.type==='reminder'&&!i.done).sort((a,b)=>a.due-b.due)[0];
   const n=$('#next');
   if(nx&&ui.filter!=='reminder'&&ui.filter!=='note'&&ui.filter!=='list'){n.hidden=false;n.dataset.id=nx.id;
@@ -458,7 +498,7 @@ function suggest(){
   if(tk&&tk.pre)list=list.filter(t=>t.startsWith(tk.pre)&&t!==tk.pre);
   list=list.slice(0,14);
   if(!list.length){el.hidden=true;return}
-  el.innerHTML='<span class="lbl">Tags</span>'+list.map(t=>`<button type="button" data-s="${esc(t)}">#${esc(t)}</button>`).join('');el.hidden=false}
+  el.innerHTML='<span class="lbl">Tags</span>'+list.map(t=>`<button type="button" data-s="${esc(t)}">${dotHtml(t)}#${esc(t)}</button>`).join('');el.hidden=false}
 function insertTag(t){
   const tk=tagToken(),v=ta.value;let a,b,txt='#'+t+' ';
   if(tk){a=tk.start;b=tk.end}else{a=b=ta.selectionStart;if(a>0&&!/\s/.test(v[a-1]))txt=' '+txt}
@@ -569,6 +609,8 @@ $('#remopts').addEventListener('click',e=>{const b=e.target.closest('.q');if(!b)
 
 $('#rail').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b||!b.dataset.f)return;ui.filter=b.dataset.f;setMode(ui.mode);render()});
 $('#tagrail').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  if(b.dataset.new){openTag(null);return}
+  if(b.dataset.manage){openTag(ui.tag);return}
   if(b.dataset.pin)ui.pinned=!ui.pinned;else ui.tag=ui.tag===b.dataset.t?null:b.dataset.t;
   setMode(ui.mode);render()});
 $('#next').addEventListener('click',()=>{const id=$('#next').dataset.id;ui.filter='all';ui.tag=null;ui.pinned=false;ui.q='';$('#q').value='';render(false);flash(id)});
@@ -608,15 +650,47 @@ function updNotif(){const b=$('#bNotif'),n=$('#notifNote');
   if(Notification.permission==='granted'){b.disabled=true;b.textContent='Notifications on'}
   else if(Notification.permission==='denied'){b.disabled=true;b.textContent='Notifications blocked';n.textContent='Notifications are blocked for this site. You can allow them in your browser settings. Reminders still show inside the app.'}}
 $('#bNotif').addEventListener('click',async()=>{try{const p=await Notification.requestPermission();if(p!=='granted')toast('Notifications were not allowed. Reminders will still show in the app.')}catch(e){toast('This browser view does not allow notifications.')}updNotif()});
-$('#bExport').addEventListener('click',async()=>{const data=JSON.stringify({app:'offload',v:3,items:S.items});$('#io').value=data;
+$('#bExport').addEventListener('click',async()=>{const data=JSON.stringify({app:'offload',v:4,tags:S.tags||[],tagColors:S.tagColors||{},items:S.items});$('#io').value=data;
   try{await navigator.clipboard.writeText(data);toast('Backup copied')}catch(e){$('#io').select();toast('Backup is in the box. Select it and copy.')}});
 $('#bImport').addEventListener('click',()=>{try{const v=JSON.parse($('#io').value);const items=Array.isArray(v)?v:v.items;if(!Array.isArray(items))throw 0;
-  migrateCats(items,v.cats);
+  if(v.tagColors&&typeof v.tagColors==='object'){S.tagColors=S.tagColors||{};Object.keys(v.tagColors).forEach(k=>{if(TCOLORS.includes(v.tagColors[k])&&!S.tagColors[k])S.tagColors[k]=v.tagColors[k]})}
+  migrateCats(items,v.cats);S.tags=[...new Set((S.tags||[]).concat((v.tags||[]).filter(x=>typeof x==='string')))];
   const ids=new Set(S.items.map(i=>i.id));let n=0;items.forEach(i=>{if(i&&i.id&&i.type&&!ids.has(i.id)){S.items.push(i);n++}});
   save();render();$('#io').value='';closeSheets();toast(`Imported ${n} entr${n===1?'y':'ies'}`)}catch(e){toast('That text is not a valid backup. Paste the whole backup and try again.')}});
 $('#bClearEx').addEventListener('click',()=>{S.items=S.items.filter(i=>!i.ex);save();render();toast('Examples removed')});
 $('#bWipe').addEventListener('click',e=>{const b=e.currentTarget;if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='Tap again: delete all';setTimeout(()=>{b.dataset.arm='';b.textContent='Delete everything'},4000);return}
   S.items=[];save();closeSheets();render();toast('Everything deleted');b.dataset.arm='';b.textContent='Delete everything'});
+
+/* ---------- tags: create, rename, delete ---------- */
+const reTag=t=>new RegExp('(^|\\s)#'+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\p{L}\\p{N}_-])','giu');
+function mapTagText(it,fn){if(it.text)it.text=fn(it.text);if(it.items)it.items.forEach(x=>x.t=fn(x.t))}
+function openTag(t){ui.tagEdit=t;const nm=$('#tname');
+  $('#tagTitle').textContent=t?'Edit #'+t:'New tag';$('#tsave').textContent=t?'Save':'Create tag';$('#tdel').hidden=!t;$('#tdel').textContent='Delete tag';
+  const n=t?(tagCounts()[t]||0):0;
+  $('#tnote').textContent=t?`Used on ${n} entr${n===1?'y':'ies'}. Renaming updates all of them. Deleting removes the tag from them but keeps the entries.`:'Tags group your entries. Once created, the tag is selected, so new entries you save are added to it. You can also type #name in any entry.';
+  ui.tagColor=t?tcOf(t):nextColor();drawSwatches();
+  openSheet('#tagSheet');nm.value=t||'';nm.focus();if(t)nm.select()}
+function drawSwatches(){
+  $('#tcolors').innerHTML=TCOLORS.map(c=>`<button type="button" class="sw" data-c="${c}" style="--tc:var(--${c})" role="radio" aria-checked="${ui.tagColor===c}" aria-label="Color ${TCOLORS.indexOf(c)+1}"></button>`).join('')
+    +`<button type="button" class="sw none" data-c="" role="radio" aria-checked="${!ui.tagColor}" aria-label="No color"></button>`}
+$('#tcolors').addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b)return;ui.tagColor=b.dataset.c||null;drawSwatches()});
+function setTagColor(t){S.tagColors=S.tagColors||{};if(ui.tagColor)S.tagColors[t]=ui.tagColor;else delete S.tagColors[t]}
+$('#tform').addEventListener('submit',e=>{e.preventDefault();
+  const name=tagSlug($('#tname').value.replace(/^#+/,''));if(!name){toast('Give the tag a name first.');return}
+  const old=ui.tagEdit;
+  if(old){
+    if(name!==old){S.items.forEach(it=>mapTagText(it,x=>x.replace(reTag(old),'$1#'+name)));
+      S.tags=(S.tags||[]).filter(x=>x!==old&&x!==name).concat((S.tags||[]).includes(old)||!tagCounts()[old]?[name]:[]);if(ui.tag===old)ui.tag=name;
+      if(S.tagColors)delete S.tagColors[old]}
+    setTagColor(name);
+    save();closeSheets();render(false);toast('Tag saved');return}
+  if(!(S.tags||[]).includes(name))S.tags=(S.tags||[]).concat(name);
+  setTagColor(name);
+  ui.tag=name;ui.pinned=false;save();closeSheets();setMode(ui.mode);render(false);const tr=$('#tagrail'),sel=tr.querySelector('.tg[aria-pressed="true"]');if(sel)tr.scrollLeft=Math.max(0,sel.offsetLeft-tr.clientWidth/2+sel.offsetWidth/2);ta.focus();toast('#'+name+' is ready. New entries will use it.')});
+$('#tdel').addEventListener('click',e=>{const b=e.currentTarget,t=ui.tagEdit;if(!t)return;
+  if(!ui.delArm){ui.delArm=true;b.textContent='Tap again to delete';return}
+  S.items.forEach(it=>mapTagText(it,x=>{const y=x.replace(reTag(t),'$1').replace(/[ \t]{2,}/g,' ').trim();return y||(x===it.text?t:'')}));
+  S.tags=(S.tags||[]).filter(x=>x!==t);if(S.tagColors)delete S.tagColors[t];if(ui.tag===t)ui.tag=null;save();closeSheets();setMode(ui.mode);render(false);toast('Deleted #'+t)});
 
 /* ---------- keep the app on the visible screen when the keyboard opens ---------- */
 const vv=window.visualViewport;
@@ -655,13 +729,26 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
 
 /* ---------- boot ---------- */
 const stored=load();
-if(stored){S=stored;if('sync' in S||'siriHintSeen' in S){delete S.sync;delete S.siriHintSeen;save()}/* categories were folded into #tags: carry existing entries over once */
+if(stored){S=stored;if('sync' in S||'siriHintSeen' in S){delete S.sync;delete S.siriHintSeen;save()}S.tags=Array.isArray(S.tags)?S.tags:[];S.tagColors=S.tagColors&&typeof S.tagColors==='object'?S.tagColors:{};
+  /* categories were folded into #tags: carry existing entries over once */
   if('cats' in S||'catsSeeded' in S||S.items.some(i=>i.cat)){migrateCats(S.items,S.cats);delete S.cats;delete S.catsSeeded;save()}
   S.settings=Object.assign({theme:'system',font:'sans',autoCal:IS_IOS},S.settings||{})}else{seed();S.settings.autoCal=IS_IOS;save()}
 const share=new URLSearchParams(location.search);
 const shared=[share.get('title'),share.get('text'),share.get('url')].filter(Boolean).join('\n');
 if(shared){ta.value=shared}
+/* Quick add: ?add=text saves a note straight away (for Siri Shortcuts, Android automation apps, bookmarks).
+   ?new=1 just opens the composer (used by the home-screen shortcut). */
+let quickMsg='';
+if(share.has('add')||share.has('new')){
+  const raw=(share.get('add')||'').trim();
+  if(raw){let tag=tagSlug(share.get('tag')||'');if(tag&&!tagsOf(raw).includes(tag))tag='#'+tag;else tag='';
+    S.items.push({id:uid(),type:'note',text:(raw+' '+tag).trim(),created:Date.now()});save();quickMsg='Saved to Offload'}
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+}
+$('#bQuickLink').addEventListener('click',async()=>{const u=location.origin+location.pathname+'?add=';
+  try{await navigator.clipboard.writeText(u);toast('Link copied')}catch(e){toast('Copy is blocked here. The link is '+u)}});
 applySettings();renderDows();setMode('note');render();
+if(quickMsg)toast(quickMsg);else if(share.has('new')&&!shared)ta.focus();
 setInterval(tick,20e3);tick();
 })();
 </script>

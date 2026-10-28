@@ -9,8 +9,10 @@ Offload is a progressive web app (PWA). It installs to the home screen, works of
 - **Notes, checklists and reminders.** Lists take one item per line; end the first line with `:` to name the list. Reminders can repeat on chosen days.
 - **Add to Calendar.** Every reminder has an **Add to Calendar** button. On iPhone, new reminders open the "Add to Calendar" screen as soon as they're saved, so the phone alerts you even when Offload is closed. Turn this off in **Settings → Reminders**. On other devices it saves a calendar file to open.
 - **One way to organize: #tags.** Type `#work` anywhere in an entry, or tap a suggested tag above the keyboard. Tags appear as chips under the filter row; tap one to see only those entries. While a tag is selected, new entries get it automatically. Note, List and Reminder describe *what* an entry is; tags describe *what it's about*.
+- **Tag colors.** Tags you create with **+ New tag** get a small colored dot inside the pill. Pick any of six colors (or none); tap **⋯** on a selected tag to change it later. Tags you only type as `#name` stay plain until you give them a color.
 - **Search** covers every entry.
 - **Share target.** On Android, share a link or text into Offload to start a note.
+- **Quick add by voice.** Opening `…/OffloadApp/?add=your%20text` saves a note immediately (add `&tag=work` to tag it). Use it from a Siri Shortcut (Dictate Text → URL Encode → Open URLs) or an Android automation app. On iPhone the link opens Safari, which stores entries separately from the home-screen app. `?new=1` just opens the composer; Android's long-press **New note** shortcut uses it. Steps are in **Settings → Quick add by voice**.
 - **Your choice of look.** Light, dark or system theme; sans, serif or mono font.
 - **Backup.** Copy a JSON backup and import it on another device.
 
