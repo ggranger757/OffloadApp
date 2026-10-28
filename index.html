@@ -153,6 +153,19 @@ button{cursor:pointer}
 .when.late{color:var(--due)}
 .when .late-pill{background:var(--due-soft);color:var(--due);border-radius:4px;padding:1px 5px;margin-right:6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em}
 .is-done .when{color:var(--muted)}
+.calbtn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:12.5px;font-weight:600}
+.calbtn svg{width:15px;height:15px;color:var(--accent)}
+.calbtn:hover{border-color:var(--accent)}
+.calbtn.sent{background:transparent;color:var(--muted);font-weight:500}
+.calbtn.sent svg{color:var(--ok)}
+.is-done .calbtn{display:none}
+.toggle{display:flex;align-items:flex-start;gap:12px;padding:4px 0 2px;cursor:pointer}
+.toggle input{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;margin:0;cursor:pointer;transition:background .15s}
+.toggle input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.toggle input:checked{background:var(--accent)}
+.toggle input:checked::after{transform:translateX(18px)}
+.toggle span{display:grid;gap:2px;font-size:14.5px;font-weight:500}
+.toggle small{font-size:12.5px;color:var(--muted);font-weight:400;max-width:52ch}
 
 /* composer */
 .composer{background:var(--surface);border-top:1px solid var(--line);padding-block:8px 10px;display:grid;gap:8px}
@@ -250,6 +263,7 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
   <button class="act" data-a="pin">Pin</button>
   <button class="act" data-a="edit">Edit</button>
   <button class="act" data-a="move">Move to category</button>
+  <button class="act" data-a="cal">Add to Calendar</button>
   <button class="act" data-a="copy">Copy text</button>
   <button class="act danger" data-a="del">Delete</button>
 </div>
@@ -262,7 +276,8 @@ textarea#ta:focus{outline:none;border-color:var(--accent)}
   <h4>Font</h4>
   <div class="seg" id="segFont"><button data-v="sans">Sans</button><button data-v="serif">Serif</button><button data-v="mono">Mono</button></div>
   <h4>Reminders</h4>
-  <div class="btns"><button class="btn" id="bNotif">Turn on notifications</button></div>
+  <label class="toggle" for="autoCal"><input type="checkbox" id="autoCal"><span>Add new reminders to my Calendar<small id="autoCalNote">After you save a reminder, your phone's "Add to Calendar" screen opens with it filled in. Tap Add, and your phone alerts you even when Offload is closed.</small></span></label>
+  <div class="btns" style="margin-top:12px"><button class="btn" id="bNotif">Turn on notifications</button></div>
   <p class="note" id="notifNote">Reminders always show inside the app. Notifications also alert you while the app is open in the background.</p>
   <h4>Install</h4>
   <div class="btns"><button class="btn primary" id="bInstall" hidden>Install Offload</button></div>
@@ -299,6 +314,8 @@ const root=document.documentElement, hostTheme=root.getAttribute('data-theme');
 
 const DEFAULT_CATS=[{id:'work',name:'Work',color:'c4'},{id:'ideas',name:'Ideas',color:'c2'},{id:'personal',name:'Personal',color:'c3'}];
 let S={items:[],cats:[],settings:{theme:'system',font:'sans'}};
+const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const CAL_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg>';
 const ui={cat:null,composeCat:null,catMode:'compose',catEdit:null,catColor:'c1',filter:'all',tag:null,q:'',mode:'note',editing:null,repeat:[],sheet:null,delArm:false};
 
 /* ---------- storage ---------- */
@@ -421,7 +438,8 @@ function card(it){
     const late=!it.done&&it.due<now;kind='Reminder';
     body=`<div class="rem"><button class="tick" data-act="done" aria-label="${it.done?'Mark not done':'Mark done'}"></button>
       <div style="min-width:0"><div class="txt">${rich(it.text)}</div>
-      <div class="when ${late?'late':''}">${late?'<span class="late-pill">Overdue</span>':''}${it.done?'Done · ':''}${dueLabel(it.due)}${it.repeat&&it.repeat.length?' · '+repLabel(it.repeat):''}</div></div></div>`;
+      <div class="when ${late?'late':''}">${late?'<span class="late-pill">Overdue</span>':''}${it.done?'Done · ':''}${dueLabel(it.due)}${it.repeat&&it.repeat.length?' · '+repLabel(it.repeat):''}</div>
+      <button class="calbtn${it.cal?' sent':''}" data-act="cal">${CAL_ICON}${it.cal?'Sent to Calendar · Add again':'Add to Calendar'}</button></div></div>`;
   }else{kind='Note';body=`<div class="txt">${rich(it.text)}</div>`}
   return `<article class="card t-${it.type}${it.done?' is-done':''}" data-id="${it.id}">
     <div class="meta"><span class="kind">${kind}</span>${(c=>c?`<span class="cattag ${c.color}"><i class="dot"></i>${esc(c.name)}</span>`:'')(catOf(it.cat))}${it.pinned?'<span class="pin">● Pinned</span>':''}<span class="sp"></span><time>${fT(it.created)}</time><button class="more" aria-label="Options">⋯</button></div>${body}</article>`;
@@ -469,6 +487,7 @@ function send(){
   const cat=pc.cat?pc.cat.id:ui.composeCat;
   let it=ui.editing?find(ui.editing):null,isNew=!it;
   if(isNew)it={id:uid(),created:Date.now()};
+  const before=it.type==='reminder'?JSON.stringify([it.text,it.due,it.repeat]):null;
   if(ui.mode==='reminder'){
     const v=$('#due').value;const due=v?new Date(v).getTime():roundUp(Date.now()+HR);
     Object.assign(it,{type:'reminder',text:raw,due:ui.repeat.length?nextOcc(due,ui.repeat,Date.now()-1):due,repeat:[...ui.repeat],done:false,notified:0});
@@ -477,11 +496,52 @@ function send(){
     const p=parseList(raw,it.items);Object.assign(it,{type:'list',text:p.title,items:p.items});delete it.due;delete it.repeat;delete it.done;
   }else{Object.assign(it,{type:'note',text:raw});delete it.items;delete it.due;delete it.repeat;delete it.done}
   delete it.ex;
+  let changed=false;
+  if(it.type==='reminder'){changed=before!==JSON.stringify([it.text,it.due,it.repeat]);if(changed)delete it.cal}else delete it.cal;
   if(cat&&catOf(cat))it.cat=cat;else delete it.cat;
   if(isNew)S.items.push(it);
   save();const wasEdit=!isNew;resetComposer();
   if(!isNew){render(false);flash(it.id)}else{if(ui.filter!=='all'&&ui.filter!==it.type)ui.filter='all';if(ui.cat&&ui.cat!==(it.cat||'none'))ui.cat=it.cat||null;ui.tag=null;render()}
   toast(wasEdit?'Saved changes':it.type==='reminder'?'Reminder set for '+dueLabel(it.due):'Saved');
+  // must run inside the tap that saved it, or the phone blocks it
+  if(it.type==='reminder'&&changed&&S.settings.autoCal)addToCalendar(it,true);
+}
+
+/* ---------- calendar export (.ics) ---------- */
+const DAYCODE=['SU','MO','TU','WE','TH','FR','SA'];
+function icsEsc(t){return String(t).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n')}
+function icsFold(line){const out=[];let cur='',len=0;
+  for(const ch of line){const b=new TextEncoder().encode(ch).length;if(len+b>73){out.push(cur);cur=' '+ch;len=1+b}else{cur+=ch;len+=b}}
+  out.push(cur);return out.join('\r\n')}
+function icsLocal(t){const d=new Date(t),p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}T${p(d.getHours())}${p(d.getMinutes())}00`}
+function icsUTC(t){return new Date(t).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}
+function buildICS(it){
+  const title=(it.text||'Reminder').replace(/(^|\s)#[\p{L}\p{N}_-]+/gu,'').replace(/\s+/g,' ').trim()||'Reminder';
+  const cat=catOf(it.cat),tags=tagsOf(it.text);
+  const notes=['Reminder from Offload',cat?'Category: '+cat.name:'',tags.length?'Tags: '+tags.map(t=>'#'+t).join(' '):''].filter(Boolean).join('\n');
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Offload//Reminders//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    'BEGIN:VEVENT','UID:'+it.id+'@offload','DTSTAMP:'+icsUTC(Date.now()),
+    // local "floating" time, so the event stays at the same clock time wherever the phone is
+    'DTSTART:'+icsLocal(it.due),'DTEND:'+icsLocal(it.due+15*60e3),
+    'SUMMARY:'+icsEsc(title),'DESCRIPTION:'+icsEsc(notes)];
+  const r=it.repeat||[];
+  if(r.length===7)L.push('RRULE:FREQ=DAILY');
+  else if(r.length)L.push('RRULE:FREQ=WEEKLY;BYDAY='+[...r].sort().map(i=>DAYCODE[i]).join(','));
+  L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(title),'TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR');
+  return L.map(icsFold).join('\r\n')+'\r\n';
+}
+function addToCalendar(it,auto){
+  try{
+    const blob=new Blob([buildICS(it)],{type:'text/calendar;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;
+    // iPhone and iPad open a calendar file straight into "Add to Calendar"; other devices save it as a file to open
+    if(!IS_IOS)a.download=((it.text||'reminder').replace(/(^|\s)#\S+/g,'').trim().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'').slice(0,40)||'reminder')+'.ics';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60e3);
+    it.cal=true;save();render(false);
+    if(!auto||!IS_IOS)toast(IS_IOS?'Tap Add to put it in your Calendar':'Calendar file saved. Open it to add the reminder.');
+  }catch(e){toast("This browser couldn't create the calendar file.")}
 }
 function flash(id){const el=document.querySelector(`.card[data-id="${id}"]`);if(el){el.scrollIntoView({block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}}
 function startEdit(it){
@@ -498,7 +558,8 @@ function openSheet(id){closeSheets();ui.sheet=id;$('#scrim').hidden=false;$(id).
 function closeSheets(){$('#scrim').hidden=true;$$('.sheet').forEach(s=>s.hidden=true);ui.sheet=null;ui.delArm=false;const d=$('#itemSheet [data-a="del"]');d.textContent='Delete'}
 function openItem(id){const it=find(id);if(!it)return;ui.itemId=id;
   $('#sPrev').textContent=fullText(it).slice(0,240);
-  $('#itemSheet [data-a="pin"]').textContent=it.pinned?'Unpin':'Pin';openSheet('#itemSheet')}
+  $('#itemSheet [data-a="pin"]').textContent=it.pinned?'Unpin':'Pin';
+  $('#itemSheet [data-a="cal"]').hidden=it.type!=='reminder';openSheet('#itemSheet')}
 
 function openCats(mode){ui.catMode=mode;ui.catEdit=null;ui.catColor=freeColor();ui.showForm=false;$('#cname').value='';
   ui.catDel=null;$('#catTitle').textContent=mode==='assign'?'Move to category':mode==='manage'?'Edit categories':'Category';
@@ -607,6 +668,7 @@ $('#feed').addEventListener('click',e=>{
   const c=e.target.closest('.card');if(!c)return;const it=find(c.dataset.id);
   if(e.target.closest('.more')){openItem(it.id);return}
   if(e.target.closest('[data-act="done"]')){complete(it);return}
+  if(e.target.closest('[data-act="cal"]')){addToCalendar(it);return}
 });
 $('#feed').addEventListener('change',e=>{const cb=e.target.closest('.chk input');if(!cb)return;
   const it=find(cb.closest('.card').dataset.id);it.items[+cb.dataset.i].done=cb.checked;delete it.ex;save();render(false)});
@@ -618,12 +680,15 @@ $('#itemSheet').addEventListener('click',async e=>{const b=e.target.closest('.ac
   if(a==='pin'){it.pinned=!it.pinned;save();closeSheets();render(false);toast(it.pinned?'Pinned':'Unpinned')}
   if(a==='edit'){closeSheets();startEdit(it)}
   if(a==='move'){openCats('assign')}
+  if(a==='cal'){closeSheets();addToCalendar(it);return}
   if(a==='copy'){try{await navigator.clipboard.writeText(fullText(it));toast('Copied')}catch(err){toast('Copy is blocked here. Long-press the text to copy it.')}closeSheets()}
   if(a==='del'){if(!ui.delArm){ui.delArm=true;b.textContent='Tap again to delete';return}
     S.items=S.items.filter(x=>x.id!==it.id);save();closeSheets();render(false);toast('Deleted')}
 });
 
-$('#bSettings').addEventListener('click',()=>{applySettings();updNotif();openSheet('#setSheet')});
+$('#bSettings').addEventListener('click',()=>{applySettings();updNotif();$('#autoCal').checked=!!S.settings.autoCal;openSheet('#setSheet')});
+$('#autoCal').addEventListener('change',e=>{S.settings.autoCal=e.target.checked;save();toast(e.target.checked?'New reminders will open in Calendar':'Calendar step turned off')});
+if(!IS_IOS)$('#autoCalNote').textContent='After you save a reminder, Offload saves a calendar file. Open it to add the reminder to your calendar with an alert.';
 $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.settings.theme=b.dataset.v;save();applySettings()});
 $('#segFont').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.settings.font=b.dataset.v;save();applySettings()});
 function updNotif(){const b=$('#bNotif'),n=$('#notifNote');
@@ -654,7 +719,7 @@ const stored=load();
 if(stored){S=stored;if('sync' in S||'siriHintSeen' in S){delete S.sync;delete S.siriHintSeen;save()}S.cats=Array.isArray(S.cats)?S.cats:[];
   /* give existing users the starter categories once; a deleted one never comes back */
   if(!S.catsSeeded){DEFAULT_CATS.forEach(d=>{if(!catOf(d.id)&&!catByName(d.name))S.cats.push({...d})});S.catsSeeded=true;save()}
-  S.settings=Object.assign({theme:'system',font:'sans'},S.settings||{})}else{seed();save()}
+  S.settings=Object.assign({theme:'system',font:'sans',autoCal:IS_IOS},S.settings||{})}else{seed();S.settings.autoCal=IS_IOS;save()}
 const share=new URLSearchParams(location.search);
 const shared=[share.get('title'),share.get('text'),share.get('url')].filter(Boolean).join('\n');
 if(shared){ta.value=shared}

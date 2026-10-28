@@ -7,6 +7,7 @@ Offload is a progressive web app (PWA). It installs to the home screen, works of
 ## Features
 
 - **Notes, checklists and reminders.** Lists take one item per line; end the first line with `:` to name the list. Reminders can repeat on chosen days.
+- **Add to Calendar.** Every reminder has an **Add to Calendar** button. On iPhone, new reminders open the "Add to Calendar" screen as soon as they're saved, so the phone alerts you even when Offload is closed. Turn this off in **Settings → Reminders**. On other devices it saves a calendar file to open.
 - **Categories.** Starts with Work, Ideas and Personal. Add, rename, recolor or delete them from **Edit** in the filter row. Pick one from the dropdown when saving, or type `@work` in an entry.
 - **#tags and search.** Tap a tag to filter by it. Search covers every entry.
 - **Share target.** On Android, share a link or text into Offload to start a note.
@@ -55,7 +56,8 @@ To try it locally first, run `python3 -m http.server 8080` in the repository fol
 ## Limits
 
 - Entries live on one device. Use **Settings → Backup** to move them.
-- Reminders alert while the app is open or running in the background. A fully closed web app can't fire alarms without a push server.
+- Offload's own reminder alerts only appear while the app is open or running in the background. Use **Add to Calendar** for alerts that arrive when it's closed.
+- Apple doesn't let web apps add to the Reminders or Calendar app without the user confirming, so adding to Calendar always takes one tap. Editing a reminder in Offload doesn't change a copy already in Calendar.
 
 ## License
 
