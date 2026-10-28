@@ -1,6 +1,6 @@
 # Offload
 
-A private, installable feed for everything you don't want to forget: notes, checklists and reminders, filed by category and #tag.
+A private, installable feed for everything you don't want to forget: notes, checklists and reminders, organized with #tags.
 
 Offload is a progressive web app (PWA). It installs to the home screen, works offline, and keeps your entries on your own device.
 
@@ -8,8 +8,8 @@ Offload is a progressive web app (PWA). It installs to the home screen, works of
 
 - **Notes, checklists and reminders.** Lists take one item per line; end the first line with `:` to name the list. Reminders can repeat on chosen days.
 - **Add to Calendar.** Every reminder has an **Add to Calendar** button. On iPhone, new reminders open the "Add to Calendar" screen as soon as they're saved, so the phone alerts you even when Offload is closed. Turn this off in **Settings → Reminders**. On other devices it saves a calendar file to open.
-- **Categories.** Starts with Work, Ideas and Personal. Add, rename, recolor or delete them from **Edit** in the filter row. Pick one from the dropdown when saving, or type `@work` in an entry.
-- **#tags and search.** Tap a tag to filter by it. Search covers every entry.
+- **One way to organize: #tags.** Type `#work` anywhere in an entry, or tap a suggested tag above the keyboard. Tags appear as chips under the filter row; tap one to see only those entries. While a tag is selected, new entries get it automatically. Note, List and Reminder describe *what* an entry is; tags describe *what it's about*.
+- **Search** covers every entry.
 - **Share target.** On Android, share a link or text into Offload to start a note.
 - **Your choice of look.** Light, dark or system theme; sans, serif or mono font.
 - **Backup.** Copy a JSON backup and import it on another device.
